@@ -1,0 +1,118 @@
+CREATE FUNCTION intset_in(cstring)
+   RETURNS intset
+   AS '_OBJWD_/intset'
+   LANGUAGE C IMMUTABLE STRICT;
+
+CREATE FUNCTION intset_out(intset)
+   RETURNS cstring
+   AS '_OBJWD_/intset'
+   LANGUAGE C IMMUTABLE STRICT;
+
+
+
+CREATE TYPE intset (
+   internallength = 16,
+   input = intset_in,
+   output = intset_out,
+   alignment = double
+);
+
+
+CREATE FUNCTION intset_contain(int, intset) 
+   RETURNS bool
+   AS '_OBJWD_/intset' 
+   LANGUAGE C IMMUTABLE STRICT;
+CREATE OPERATOR ? (
+   leftarg = int, rightarg = intset, procedure = intset_contain,
+   restrict = scalarltsel, join = scalarltjoinsel
+);
+
+CREATE FUNCTION intset_len(intset) 
+   RETURNS int
+   AS '_OBJWD_/intset' 
+   LANGUAGE C IMMUTABLE STRICT;
+CREATE OPERATOR # (
+   rightarg = intset, procedure = intset_len
+);
+
+
+CREATE FUNCTION intset_contain_set_left(intset, intset) 
+   RETURNS bool
+   AS '_OBJWD_/intset' 
+   LANGUAGE C IMMUTABLE STRICT;
+CREATE OPERATOR >@ (
+   leftarg = intset, rightarg = intset, procedure = intset_contain_set_left,
+   commutator = @< , 
+   restrict = scalarltsel, join = scalarltjoinsel
+);
+
+
+CREATE FUNCTION intset_contain_set_right(intset, intset) 
+   RETURNS bool
+   AS '_OBJWD_/intset' 
+   LANGUAGE C IMMUTABLE STRICT;
+CREATE OPERATOR @< (
+   leftarg = intset, rightarg = intset, procedure = intset_contain_set_right,
+   commutator = >@ , 
+   restrict = scalarltsel, join = scalarltjoinsel
+);
+
+CREATE FUNCTION intset_equal(intset, intset) 
+   RETURNS bool
+   AS '_OBJWD_/intset' 
+   LANGUAGE C IMMUTABLE STRICT;
+CREATE OPERATOR = (
+   leftarg = intset, rightarg = intset, procedure = intset_equal,
+   commutator = = ,
+   -- leave out negator since we didn't create <> operator
+   negator = <> ,
+   restrict = eqsel, join = eqjoinsel
+);
+
+CREATE FUNCTION intset_not_equal(intset, intset) 
+   RETURNS bool
+   AS '_OBJWD_/intset' 
+   LANGUAGE C IMMUTABLE STRICT;
+CREATE OPERATOR <> (
+   leftarg = intset, rightarg = intset, procedure = intset_not_equal,
+   commutator = <> ,
+   negator = = ,
+   restrict = neqsel, join = neqjoinsel
+);
+
+CREATE FUNCTION intset_and(intset, intset) 
+   RETURNS intset
+   AS '_OBJWD_/intset' 
+   LANGUAGE C IMMUTABLE STRICT;
+CREATE OPERATOR && (
+   leftarg = intset, rightarg = intset, procedure = intset_and,
+   commutator = && 
+);
+
+CREATE FUNCTION intset_union(intset, intset) 
+   RETURNS intset
+   AS '_OBJWD_/intset' 
+   LANGUAGE C IMMUTABLE STRICT;
+CREATE OPERATOR || (
+   leftarg = intset, rightarg = intset, procedure = intset_union,
+   commutator = ||
+);
+
+
+CREATE FUNCTION intset_disjunction(intset, intset) 
+   RETURNS intset
+   AS '_OBJWD_/intset' 
+   LANGUAGE C IMMUTABLE STRICT;
+CREATE OPERATOR !! (
+   leftarg = intset, rightarg = intset, procedure = intset_disjunction,
+   commutator = !!
+);
+
+CREATE FUNCTION intset_minus(intset, intset) 
+   RETURNS intset
+   AS '_OBJWD_/intset' 
+   LANGUAGE C IMMUTABLE STRICT;
+CREATE OPERATOR - (
+   leftarg = intset, rightarg = intset, procedure = intset_minus
+);
+
