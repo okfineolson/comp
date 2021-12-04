@@ -1,0 +1,66 @@
+#!/usr/bin/python3
+# COMP3311 20T3 Ass3 ... print info about different releases for Movie
+
+import sys
+import psycopg2
+import re
+
+# from helpers import whatever, functions, you, need
+from helpers import Connector
+from helpers import handle_regex
+
+
+# define any local helper functions here
+def print_release(entry):
+    if entry[1]:
+        region = entry[1].rstrip(" ")
+    if entry[2]:
+        language = entry[2].rstrip(" ")
+    if entry[3]:
+        extra_info = entry[3].strip(" ")
+    if entry[1] and entry[2]:
+        print(f"'{entry[0]}' (region: {region}, language: {language})")
+    elif entry[1]:
+        print(f"'{entry[0]}' (region: {region})")
+    elif entry[2]:
+        print(f"'{entry[0]}' (language: {language})")
+    elif entry[3]:
+        print(f"'{entry[0]}' ({extra_info})")
+    else:
+        print(f"'{entry[0]}'")
+
+
+# set up some globals
+usage = "Usage: rels 'PartialMovieTitle'"
+connector = None
+
+# process command-line args
+argc = len(sys.argv)
+if argc != 2:
+    print(usage)
+    sys.exit(1)
+partial_title = sys.argv[1]
+# manipulate database
+try:
+    sql = "SELECT id, title, start_year FROM movies WHERE title ILIKE %(like)s ESCAPE '=' ORDER BY start_year, title"
+    connector = Connector()
+    title = handle_regex(partial_title)
+    rows = connector.execute(sql, dict(like=title))
+    if len(rows) > 1:
+        print("Movies matching '%s'" % partial_title)
+        print("===============")
+        for row in rows:
+            print(f"{row[1]} ({row[2]})")
+    elif len(rows) == 1:
+        print("%s (%d) was also released as" % (rows[0][1], rows[0][2]))
+        sql = "SELECT local_title, region, language, extra_info FROM aliases WHERE movie_id=%(movie_id)s ORDER BY ordering"
+        rows = connector.execute(sql, {"movie_id": rows[0][0]})
+        for row in rows:
+            print_release(row)
+    else:
+        print("No movie matching '%s'" % partial_title)
+except psycopg2.Error as err:
+    print("DB error: ", err)
+finally:
+    if connector:
+        connector.close()

@@ -1,0 +1,17 @@
+(a)
+
+1.spark is faster than mapreduce
+2.mapreduce can not handle real time processing but spark can
+3.mapreduce is more security than spark
+4.spark can cache the memory data for processing its task but mapreduce can't
+
+(b)
+
+in CAP ,P is easy to realize
+but A and C are contradictory
+because if we want to have Consistency , we need to
+lock down all the files to make sure All files have been changed correctly
+but at this time those files can not read or write by other user, it loss Availability 
+
+and if we want Availability ,them we can not lock down those files, 
+the Consistency does not hold

@@ -1,0 +1,119 @@
+#!/usr/bin/python3
+# COMP3311 20T3 Ass3 ... get Name's biography/filmography
+
+import sys
+import psycopg2
+# from helpers import whatever, functions, you, need
+from helpers import Connector, handle_regex
+
+
+# define any local helper functions here
+def print_bio(person) -> str:
+    if person[2] and person[3]:
+        return f"{person[1]} ({person[2]}-{person[3]})"
+    elif person[2]:
+        return f"{person[1]} ({person[2]}-)"
+    elif person[3]:
+        return f"{person[1]} (-{person[3]})"
+    else:
+        return f"{person[1]} (???)"
+
+
+def print_detail(acting: dict, crew: dict) -> None:
+    film_set = set()
+    if acting:
+        for v in acting.values():
+            film_set.add((v[0][0], v[0][1]))
+    if crew:
+        for v in crew.values():
+            film_set.add((v[0][0], v[0][1]))
+    films = []
+    for film in film_set:
+        films.append(film)
+    films.sort(key=lambda x: (x[1], x[0]))
+    for film in films:
+        k = f"{film[0]} ({film[1]})"
+        print(k)
+        if acting and k in acting:
+            roles = acting[k]
+            for role in roles:
+                print(f" playing {role[2]}")
+        if crew and k in crew:
+            roles = crew[k]
+            for role in roles:
+                r = role[2][0].upper() + role[2][1:]
+                r = " ".join(r.split("_"))
+                print(f" as {r}")
+
+
+def retrieve_roles(sql: str, conn: Connector, name_id: int) -> dict:
+    crew_roles = conn.execute(sql, {"name_id": name_id})
+    if len(crew_roles) == 0:
+        return None
+    result: dict(str, list) = {}
+    for row in crew_roles:
+        k = f"{row[0]} ({row[1]})"
+        if k in result:
+            result[k].append(row)
+        else:
+            result[k] = [row, ]
+    return result
+
+
+# set up some globals
+usage = "Usage: bio 'NamePattern' [Year]"
+connector = None
+
+# process command-line args
+argc = len(sys.argv)
+if argc < 2:
+    print(usage)
+    sys.exit(1)
+partial_name = sys.argv[1]
+birth_year = None
+if argc > 2:
+    try:
+        year = int(sys.argv[2])
+    except ValueError:
+        print(usage)
+        sys.exit(1)
+
+# manipulate database
+try:
+    connector = Connector()
+    name = handle_regex(partial_name)
+    if birth_year:
+        sql = "SELECT id, name, birth_year, death_year FROM names WHERE " \
+              "birth_year=%(birth_year)s and name ILIKE %(like_name)s ESCAPE '=' ORDER BY name"
+        rows = connector.run(sql, {"birth_year": birth_year, "like_name": name})
+    else:
+        sql = "SELECT id, name, birth_year, death_year FROM names WHERE name ILIKE %(like_name)s ESCAPE '=' " \
+              "ORDER BY name"
+        rows = connector.run(sql, {"like_name": name})
+    if len(rows) > 1:
+        print(f"Names matching '{partial_name}'")
+        print("===============")
+        for row in rows:
+            print_bio(row)
+    elif len(rows) == 1:
+        print(f"Filmography for {print_bio(rows[0])}")
+        print("===============")
+        acting_sql = "SELECT movies.title, movies.start_year, ar.played " \
+                     "FROM principals INNER JOIN movies ON principals.movie_id=movies.id " \
+                     "INNER JOIN acting_roles as ar ON principals.movie_id=ar.movie_id and principals.name_id=ar.name_id " \
+                     "WHERE principals.name_id=%(name_id)s"
+        crew_sql = "SELECT movies.title, movies.start_year, cr.role " \
+                   "FROM principals INNER JOIN movies ON principals.movie_id=movies.id " \
+                   "INNER JOIN crew_roles as cr ON principals.movie_id=cr.movie_id and principals.name_id=cr.name_id " \
+                   "WHERE principals.name_id=%(name_id)s"
+        acting_dict = retrieve_roles(acting_sql, connector, rows[0][0])
+        crew_dict = retrieve_roles(crew_sql, connector, rows[0][0])
+        print_detail(acting_dict, crew_dict)
+    else:
+        print(f"No name matching '{partial_name}'")
+except psycopg2.Error as err:
+    print("DB error: ", err)
+    .
+finally:
+    if connector:
+        connector.close()

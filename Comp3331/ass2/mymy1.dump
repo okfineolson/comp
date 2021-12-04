@@ -1,0 +1,51 @@
+create table Subjects (
+	id          integer, -- PG: serial
+	code        char(8) not null,
+--	              PG: check (code ~ '[A-Z]{4}[0-9]{4}'),
+	name        MediumName not null,
+	longname    LongName,
+	uoc         integer check (uoc >= 0),
+	offeredBy   integer references OrgUnits(id),
+	eftsload    float,
+	career      CareerType,
+	syllabus    TextString, -- PG: text
+	contactHPW  float, -- contact hours per week
+	_excluded   text,    -- plain text from MAPPS
+	excluded    integer, -- references Acad_object_groups(id),
+	_equivalent text,    -- plain textfrom MAPPS
+	equivalent  integer, -- references Acad_object_groups(id),
+	_prereq     text,    -- plain text from MAPPS
+	prereq      integer, -- references Rules(id)
+	replaces    integer references Subjects(id),
+	firstOffer  integer references Terms(id), -- should be not null
+	lastOffer   integer references Terms(id), -- null means current
+	primary key (id)
+);
+
+create table Subject_prereqs (
+	subject     integer references Subjects(id),
+	career      CareerType, -- what kind of students it applies to
+	rule        integer references Rules(id),
+	primary key (subject,career,rule)
+);
+create table Rules (
+	id          integer,
+	name        MediumName,
+	type        RuleType,
+	min         integer check (min >= 0),
+	max         integer check (min >= 0),
+	ao_group    integer references Acad_object_groups(id),
+	description TextString,
+	primary key (id)
+);
+create table Acad_object_groups (
+	id          integer,
+	name        LongName,
+	gtype       AcadObjectGroupType not null,
+	glogic      AcadObjectGroupLogicType,
+	gdefBy      AcadObjectGroupDefType not null,
+	negated     boolean default false,
+	parent      integer, -- references Acad_object_groups(id),
+	definition  TextString, -- if pattern or query-based group
+	primary key (id)
+);

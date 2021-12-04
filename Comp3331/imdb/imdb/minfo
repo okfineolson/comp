@@ -1,0 +1,91 @@
+#!/usr/bin/python3
+# COMP3311 20T3 Ass3 ... print info about cast and crew for Movie
+
+import sys
+import psycopg2
+from helpers import Connector, handle_regex
+
+# from helpers import whatever, functions, you, need
+
+
+# define any local helper functions here
+def print_actors(actors):
+    print("Starring")
+    for actor in actors:
+        print(f" {actor[0]} as {actor[1]}")
+
+
+def print_crews(crews):
+    print("and with")
+    for crew in crews:
+        role = crew[1][0].upper() + crew[1][1:]
+        role = " ".join(role.split("_"))
+        print(f" {crew[0]}: {role}")
+
+
+# set up some globals
+usage = "Usage: minfo 'MovieTitlePattern' [Year]"
+connector = None
+
+# process command-line args
+argc = len(sys.argv)
+partial_title = None
+year = None
+if argc < 2:
+    print(usage)
+    sys.exit(1)
+partial_title = sys.argv[1]
+if argc > 2:
+    try:
+        year = int(sys.argv[2])
+    except ValueError:
+        print(usage)
+        sys.exit(1)
+
+# manipulate database
+try:
+    connector = Connector()
+    title = handle_regex(partial_title)
+    if year:
+        sql = "SELECT id, title, start_year FROM movies WHERE start_year=%(year)s and title ILIKE %(like)s ESCAPE '='" \
+              " ORDER BY start_year, title"
+        rows = connector.run(sql, {"year": year, "like": title})
+    else:
+        sql = "SELECT id, title, start_year FROM movies WHERE title ILIKE %(like)s ESCAPE '=' ORDER BY start_year, " \
+              "title"
+        rows = connector.run(sql, {"like": title})
+    if len(rows) > 1:
+        if not year:
+            print(f"Movies matching '{partial_title}'")
+        else:
+            print(f"Movies matching '{partial_title}' {year}")
+        print("===============")
+        for row in rows:
+            print(f"{row[1]} ({row[2]})")
+    elif len(rows) == 1:
+        print(f"{rows[0][1]} ({rows[0][2]})")
+        print("===============")
+        movie_id = rows[0][0]
+        sql = "select names.name, roles.played from principals as pri " \
+              "inner join acting_roles as roles on pri.movie_id=roles.movie_id and pri.name_id=roles.name_id " \
+              "inner join names as names on roles.name_id=names.id where roles.movie_id=%(movie_id)s " \
+              "order by pri.ordering, roles.played"
+        actors = connector.run(sql, {"movie_id": movie_id})
+        if len(actors) > 0:
+            print_actors(actors)
+        sql = "select names.name, roles.role from principals as pri " \
+              "inner join crew_roles as roles on pri.movie_id=roles.movie_id and pri.name_id=roles.name_id " \
+              "inner join names as names on roles.name_id=names.id where roles.movie_id=%(movie_id)s " \
+              "order by pri.ordering, roles.role"
+        crews = connector.run(sql, {"movie_id": movie_id})
+        if len(crews) > 0:
+            print_crews(crews)
+    else:
+        if not year:
+            print(f"No movie matching '{partial_title}'")
+        else:
+            print(f"No movie matching '{partial_title}' {year}")
+except psycopg2.Error as err:
+    print("DB error: ", err)
+finally:
+    connector.close()

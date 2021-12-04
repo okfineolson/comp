@@ -1,0 +1,38 @@
+class Mapper
+    	method map(self, Text)
+       	 	foreach word in the Text.split(" ") 
+        			Emit( word, 1)
+class Reducer 
+	method reduce_init(self)
+		topk_list = [ks 0 in this array]
+		current_count = 0
+		current_word = None
+		word = None
+	method reduce(key, Value)//key is term value is 1
+l		word,count = key.split("\t",1)
+		
+		if current_word == word:
+        			current_count += count
+			//count the total number of this word
+		else：
+			if(current_count larger than the smallest value in topk_list)
+				add (current_word ,current_count ) into topk list 
+        			current_count = count
+        			current_word = word
+	method reduce_final(self)
+		Emit(topk_list )
+	method reduce_final(self,key)
+		for value in sum(key) from 0 to k		
+			Emit(value )
+My solution is first do word count to all the line and count its top k 
+eg.
+1 2 3 4 1  => (1,2) (2,1), (3,1) ,(4,1)
+2 3 4 5 6	=> (2,1) (3,1), (4,1) ,(5,1) (6,1)
+
+them sum those array together to ge a big word count
+(1,2)(2,2)(3,2)(3,2)(5,1)(6,1)
+and finally find the top k items in this array
+
+this method don't need to record all the characters
+        	Because if a word in its line is not in topk
+	Then he wouldn't be topk of the entire file

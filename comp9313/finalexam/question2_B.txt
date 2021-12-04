@@ -1,0 +1,32 @@
+class Mapper
+	method map(self, Lines)
+		foreach each line in the list of locations  
+			x,y =line.split(":")(1),line.split (":")(2).split(" ")
+			(1：2 3 4 it to  1,[2,3,4] 
+			Emit(x,y)
+class Reducer 
+	method reduce_init(self)
+		edge_dic = {}
+	method reduce(key, value)
+		for num in value:
+			for num2 in value;				
+				if key<num
+					if num1 != num2
+						edge_dic [key,num1] = (key,num2).sorted()
+				else 
+					if key != num2
+						edge_dic [num,key] = (key,num2).sorted()
+	method combiner(self)
+		Emit(edge_dic)
+	method reduce_final(self,key)
+		for value in sum(key).sorted()
+			Emit(value)
+my solution is first map each line into (vertex,list of vertex that has edge with this vertex)
+then for each set , create a egde set the reccorded all the possible edge start from this vertex 
+eg.   1,[2,3,4]=>1,2:(1,3),(1,4)   1,3:(1,2),(1,4)    1,4:(1,2),(1,4)
+but this only record the possible edge from vertex 1
+so if we have 2,1 ,it will becomes to 1,2 to make sure we have both recor the
+possible edges from vertex 1 and 2
+eg    2,[1,5]  => 1,2:(2,5)  2,5:(1,2)
+
+then the final reducer mixed them together to get 1,2:(1,3)(1,4)(2,5)

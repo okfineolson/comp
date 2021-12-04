@@ -1,0 +1,20 @@
+(a)
+since the principle of collaborative filtering based requires additional users to be refered
+Given that we don't know any other user who shares U1's preferences
+we cant use collaborative  filtering based as an recommender
+
+(b)
+u1	{A:2,D:4}
+u2	{A:1,B:3,D:4}
+u3	{B:5,D:3,E:2}
+
+
+sim(u1,u2) = 2+16/sqrt(20*26) = 0.79
+sim(u1,u3) = 12/sqrt(20*38) = 0.435
+
+R(u1,B) = (sim(u1,u2) *R(u2,B) +sim(u1,u3) *R(u3,B)) / (sim(u1,u2)+sim(u1,u3))
+
+=	0.79*3+0.435*5/0.79+0.435
+=	4.545/1.225=3.71
+
+Estimate rating of U1 to B is 3.71

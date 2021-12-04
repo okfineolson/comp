@@ -1,0 +1,52 @@
+(i) 
+A (“the sky is blue the sun is bright”) 
+B (“the sun in the sky is bright”)
+2-shingles for A  = （"the sky","sky is","is blue","blue the","the sun","sun is","is bright"）
+2-shingles for B  = ("the sun","sun in","in the","the sky","sky is","is bright")
+
+Jccard(2sglA,2sglB) = 4/9 = 0.444
+
+(ii)
+2-shingles for A U 2-shingles for B = 
+（"the sky","sky is","is blue","blue the","the sun","sun is","is bright","sun in","in the"）
+and we can make a table using thouse value
+       N		A       B
+"the sky" 	0	1       1
+"sky is"	1	1       1
+"is blue"	2	1       0
+"blue the"	3	1       0
+"the sun"	4	1       1
+"sun is"	5	1       0
+"is bright"   6	1       1
+"sun in"	7	0       1
+"in the"	8	0       1
+M = 9	              sig1   sig2
+h1(0) = 8	       8       8
+h2(0) = 1	       1       1
+
+h1(1) = 4		4       4
+h2(1) = 3		1       1
+
+h1(2) = 0		0       4
+h2(2) = 5		1       1
+
+h1(3) = 5		0       4
+h2(3) = 7		1       1
+
+h1(4) = 1		0       1
+h2(4) = 0		0       0
+
+h1(5) = 6		0       1
+h2(5) = 2		0       0
+
+h1(6) = 2		0       1
+h2(6) = 4		0       0
+
+h1(7) = 7		0       1
+h2(7) = 6		0       0
+
+h1(8) = 3		0       1
+h2(8) = 8		0       0
+
+(iii)
+
