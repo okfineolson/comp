@@ -1,0 +1,24 @@
+# Template file for aws codedeploy with an EC2/On-premise
+version: 0.0
+os: linux
+
+files:
+  - source: /
+    destination: /home/ubuntu/aws-code-deploy-demo
+
+hooks:
+  ApplicationStop:
+    - location: aws-scripts/app-stop.sh
+      timeout: 300
+
+  BeforeInstall:
+    - location: aws-scripts/before-install.sh
+      timeout: 300
+
+  AfterInstall:
+    - location: aws-scripts/after-install.sh
+      timeout: 300
+
+  ApplicationStart:
+    - location: aws-scripts/app-start.sh
+      timeout: 300
