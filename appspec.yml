@@ -3,7 +3,7 @@ os: linux
 
 files:
   - source: /
-    destination: /home/ubuntu/main
+    destination: /home/ubuntu/aws-code-deploy-demo
 
 hooks:
   ApplicationStop:
